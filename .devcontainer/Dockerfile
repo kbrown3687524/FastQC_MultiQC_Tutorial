@@ -71,13 +71,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Switch back to mamba user for running user-level tests and downloads
 USER $MAMBA_USER
 
-# Grab test data from FastQC's GitHub repository
-RUN wget -O complex.fastq https://raw.githubusercontent.com/s-andrews/FastQC/master/test/data/complex.fastq && \
-    wget -O minimal.fastq https://raw.githubusercontent.com/s-andrews/FastQC/master/test/data/minimal.fastq
-
 # Run FastQC on the test data
-RUN fastqc complex.fastq minimal.fastq -o /data/test_output && \
-    ls -l /data/test_output
+RUN mkdir -p test_output && \
+    fastqc HG004_R1.fastq.gz HG004_R2.fastq.gz -o test_output && ls -l test_output
 
 # check that the expected output files are present
 RUN head -n 1 /data/test_output/complex_fastqc.zip && \
