@@ -78,5 +78,8 @@ RUN mkdir -p test_output && \
     fastqc HG004_R2.fastq.gz -o test_output && \
     ls -l test_output
 
+RUN xdg-open test_output/HG004_R1_fastqc.html && \
+    xdg-open test_output/HG004_R2_fastqc.html
+
 # list installed packages and versions for testing purposes
 RUN micromamba list -n fastqc
