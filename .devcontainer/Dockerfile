@@ -1,7 +1,6 @@
 # Version arguments
 # ARG variables only persist during build time
-ARG FASTQC_VERSION="v0.11.9_cv8"
-
+ARG FASTQC_VERSION="0.11.9"
 
 FROM mambaorg/micromamba:2.5.0-ubuntu22.04 AS app
 
@@ -10,9 +9,8 @@ ARG FASTQC_VERSION
 # Example: setting an environment variable or running a command with it
 RUN echo "Successfully pulled FastQC version: ${FASTQC_VERSION}"
 
-# build and run as root users since micromamba image has 'mambauser' set as the $USER
+# Switch to root only when necessary for system-level labels/setup
 USER root
-# set workdir to default for building; set to /data at the end
 WORKDIR /
 
 LABEL base.image="biocontainers/fastqc:v0.11.9_cv8"
@@ -25,13 +23,23 @@ LABEL license="https://www.bioinformatics.babraham.ac.uk/projects/fastqc/license
 LABEL maintainer="Your Name"
 LABEL maintainer.email=""
 
-# Set the environment path
-ENV PATH='/opt/conda/envs/fastqc/bin:${PATH}'\
+# Set the environment path using DOUBLE quotes and proper spacing
+ENV PATH="/opt/conda/envs/fastqc/bin:${PATH}" \
     LC_ALL=C.UTF-8
 
-# Install FastQC using conda
-RUN mamba create -n fastqc -y -c bioconda -c conda-forge fastqc=${FASTQC_VERSION} && \
-    mamba clean -a -y
+# Switch back to the default mamba user to safely install packages
+USER $MAMBA_USER
+
+# Install FastQC using micromamba (not mamba)
+RUN micromamba create -n fastqc -y -c bioconda -c conda-forge fastqc=${FASTQC_VERSION} && \
+    micromamba clean -a -y
+
+# Install MultiQC in the same environment used by the tutorial
+RUN micromamba install -n fastqc -y -c bioconda -c conda-forge multiqc && \
+    micromamba clean -a -y
+
+# Switch to root to modify system directory permissions
+USER root
 
 # Set the working directory to /data
 WORKDIR /data
@@ -42,21 +50,30 @@ RUN chmod -R a+rwX /opt/conda/envs/fastqc
 # default command to run when container starts
 CMD ["fastqc", "--help"]
 
+# Devcontainer target used for Codespaces interactive sessions.
+FROM app AS dev
+
+CMD ["/bin/bash"]
+
 # new base for testing
 FROM app AS test
 
-RUN fastqc --help && \
-    fastqc --version
+# Switch to root for apt-get installations
+USER root
 
 # install dependencies; cleanup apt garbage
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
     procps \
+    wget \
     && rm -rf /var/lib/apt/lists/*
 
+# Switch back to mamba user for running user-level tests and downloads
+USER $MAMBA_USER
+
 # Grab test data from FastQC's GitHub repository
-RUN apt-get update && apt-get install -y --no-install-recommends && \
-    wget -O complex.fastq https://github.com/s-andrews/FastQC/blob/master/test/data/complex.fastq && \
-    wget -O minimal.fastq https://github.com/s-andrews/FastQC/blob/master/test/data/minimal.fastq
+RUN wget -O complex.fastq https://raw.githubusercontent.com/s-andrews/FastQC/master/test/data/complex.fastq && \
+    wget -O minimal.fastq https://raw.githubusercontent.com/s-andrews/FastQC/master/test/data/minimal.fastq
 
 # Run FastQC on the test data
 RUN fastqc complex.fastq minimal.fastq -o /data/test_output && \
@@ -67,4 +84,4 @@ RUN head -n 1 /data/test_output/complex_fastqc.zip && \
     head -n 1 /data/test_output/minimal_fastqc.zip
 
 # list installed packages and versions for testing purposes
-RUN conda list -n fastqc
+RUN micromamba list -n fastqc
