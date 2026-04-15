@@ -1,0 +1,12 @@
+{
+    "name": "FastQC Tutorial",
+    "build": {
+        "dockerfile": "Dockerfile"
+    },
+    "customizations": {
+        "vscode": {
+            "settings": {},
+            "extensions": []
+        }
+    }
+}
