@@ -45,7 +45,8 @@ USER root
 WORKDIR /data
 
 # make directory editable
-RUN chmod -R a+rwX /opt/conda/envs/fastqc
+RUN chmod -R a+rwX /opt/conda/envs/fastqc && \
+    chown -R $MAMBA_USER:$MAMBA_USER /data
 
 # default command to run when container starts
 CMD ["fastqc", "--help"]
