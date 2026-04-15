@@ -73,15 +73,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 USER $MAMBA_USER
 
 # Download the raw data files from GitHub and run FastQC on the test data
-RUN mkdir -p test_output && \
-    wget -qO HG004_R1.fastq.gz "https://raw.githubusercontent.com/kbrown3687524/FastQC_MultiQC_Tutorial/main/data/HG004_R1.fastq.gz" && \
-    wget -qO HG004_R2.fastq.gz "https://raw.githubusercontent.com/kbrown3687524/FastQC_MultiQC_Tutorial/main/data/HG004_R2.fastq.gz" && \
-    fastqc HG004_R1.fastq.gz -o test_output && \
-    fastqc HG004_R2.fastq.gz -o test_output && \
-    ls -l test_output
+RUN mkdir -p data && \
+    wget -qO data/HG004_R1.fastq.gz "https://raw.githubusercontent.com/kbrown3687524/FastQC_MultiQC_Tutorial/main/data/HG004_R1.fastq.gz" && \
+    wget -qO data/HG004_R2.fastq.gz "https://raw.githubusercontent.com/kbrown3687524/FastQC_MultiQC_Tutorial/main/data/HG004_R2.fastq.gz" && \
+    fastqc data/HG004_R1.fastq.gz -o data && \
+    fastqc data/HG004_R2.fastq.gz -o data && \
+    ls -l data
 
-RUN test -f test_output/HG004_R1_fastqc.html && \
-    test -f test_output/HG004_R2_fastqc.html && \
+RUN test -f data/HG004_R1_fastqc.html && \
+    test -f data/HG004_R2_fastqc.html && \
     echo "Success! Your HG004 reports were generated."
 
 # list installed packages and versions for testing purposes
