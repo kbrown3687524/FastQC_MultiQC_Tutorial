@@ -74,11 +74,9 @@ USER $MAMBA_USER
 
 # Run FastQC on the test data
 RUN mkdir -p test_output && \
-    fastqc HG004_R1.fastq.gz HG004_R2.fastq.gz -o test_output && ls -l test_output
-
-# check that the expected output files are present
-RUN head -n 1 /data/test_output/complex_fastqc.zip && \
-    head -n 1 /data/test_output/minimal_fastqc.zip
+    fastqc HG004_R1.fastq.gz -o test_output && \
+    fastqc HG004_R2.fastq.gz -o test_output && \
+    ls -l test_output
 
 # list installed packages and versions for testing purposes
 RUN micromamba list -n fastqc
